@@ -22,7 +22,7 @@ model.build()
 print("finish building")
 model.solve('Study 1')
 print("finish solving")
-model.export('Image 2', 'SlidingMode_2D_param_10mm.png')
+model.export('Image 1', 'SlidingMode_2D_param_10mm.png')
 
 (indices, values) = model.outer('Study 1//Parametric Solutions 1')
 
