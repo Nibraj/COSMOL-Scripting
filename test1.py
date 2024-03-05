@@ -2,34 +2,42 @@ import mph
 import numpy as np
 import pandas as pd
 
+# Step 1: Initialize COMSOL client
 client = mph.start()
+
+# Step 2: Load COMSOL model
 model = client.load('SlidingMode_2D.mph')
 
-x_min = 1
-x_max = 70
+# Step 3: Define parameter sweep range
+parameter_values = list(range(50, 151, 2))  # Generate values from 50 to 150 with a step of 2
+
+# Step 4: Perform parametric sweep
+for x in parameter_values:
+    # Step 4a: Set parameter value
+    model.parameter('x1', str(x))
+    print('value of x is ', x)
+    # Step 4b: Rebuild model (if necessary)
+    model.build()
+    print("finish building")
+    # Step 4c: Solve study
+    model.solve('Study 1')  
+    print("finish solving")
+    # Step 4d: Export images for specified values
+    if x in [50, 75, 100, 125, 150]:
+        model.export('Image 1', f'SlidingMode_2D_param{x}mm.png')  # Export images
+        print("Image created:", x, " mm")
+
+print("Complete simulation")
+
+# Step 5: Extract results and save to Excel
 simul_result = np.array([])
 E = 'es.intWe'
 parametric_sweep = 'Study 1//Parametric Solutions 1'
 
-def range_with_floats(start, stop, step):
-    while stop > start:
-        yield start
-        start += step
-
-
-model.parameter('x1', str(x_max))
-model.build()
-print("finish building")
-model.solve('Study 1')
-print("finish solving")
-model.export('Image 1', 'SlidingMode_2D_param_10mm.png')
-
 (indices, values) = model.outer('Study 1//Parametric Solutions 1')
 
-for i in range (len(indices)):
+for i in range(len(indices)):
     simul_result = np.append(simul_result,model.evaluate(E, 'J', parametric_sweep, 'first', i+1))
-
-print(simul_result)
 
 data = {
     'x1 [mm]': indices,
@@ -44,17 +52,3 @@ df.to_excel(excel_file_path, index=False)
 
 print(f"Values exported to {excel_file_path}")
 
-
-'''
-for x in range_with_floats(x_min, x_max, 10):
-    print("Current parameter: ", model.parameters())
-    model.parameter('x1', str(x))
-    model.build()
-    print("finish building")
-    model.solve('Study 1')
-    print("finish solving")
-    print('value of x is ', x)
-    model.export('Image 2', f'SlidingMode_2D_param{x}mm.png')
-'''
-
-print("Complete simulation")
